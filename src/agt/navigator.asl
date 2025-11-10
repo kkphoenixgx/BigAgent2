@@ -1,35 +1,45 @@
 !controlNavigation.
 
 
-+!controlNavigation: command(N, Command)[source(teletela)] & not busy[source(eye)] <-
-  .send(eye, achieve, Command);
-  .print("⚓: Sending eye command", Command);
-  .wait(1000);
++!controlNavigation: busy[source(eye)] <-
+  .print("⚓:  Waiting eye to be ready.");
+  .wait(5000);
   !controlNavigation;
 .
-
 
 +!controlNavigation: not command(N, Command)[source(teletela)] <-
-  .wait(1000);
+  .print("⚓:  Nada PRA FAZER.");
+  .wait(5000);
   !controlNavigation;
 .
 
++!controlNavigation: command(N, Command)[source(teletela)] & not busy[source(eye)] <-
+  .send(eye, achieve, Command);
+  .print("⚓: Achieving eye command: ",N," ", Command);
+  .wait(busy[source(eye)], 20000);
+  .print("Recebi busy remover N=",N);
+  -command(N,Command)[source(teletela)];
+  !controlNavigation;
+.
 
-+!controlNavigation: busy[source(eye)] <-
+-!controlNavigation <-
   .wait(2000);
-  .print("⚓:  Waiting eye to be ready.");
+  .print("algo nao está certo....");
   !controlNavigation;
 .
 
 +!cancel <-
   .abolish(command(_, _));
-  .print("⚓:  Waiting eye to be ready.");
+  .print("⚓:  canceled operation");
 
   .send(eye, tell, cancel);
 .
 
-+!setNotBusy <-
-  .send(eye, achieve, setNotBusy);
++!setNotBusy <- .send(eye, achieve, setNotBusy); .
+
+
+//-busy[source(eye)] <- .print("Ok, eye tá busy") .
+
++command(N, Command)[source(teletela)] <-
+  .print("Recebi comando: ", Command)
 .
-
-
