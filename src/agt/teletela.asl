@@ -16,7 +16,7 @@ currentLimit(0).
 //+ready <- !pathRequest.
 
 +!pathRequest: teletelaUUID(UUID) & humanUUID(Human) & not running<-
-	.print("📺: Wainting human command.");
+	.print("📺: Waiting human command.");
 	.random(R); 
 	.wait(10000*R);
 	!pathRequest
