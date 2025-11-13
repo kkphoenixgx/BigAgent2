@@ -40,11 +40,11 @@ currentLimit(0).
   +running;
 	?commandId(N);
 	-+commandId(N+1);
-  .print("👁️: Up command received");
+  .print("📺: Up command received.");
 	!upAjustNumber(Limit);
 	?currentLimit(NewLimit);
 	.send(navigator, tell, command(N+1, up(NewLimit)));
-	.sendOut(H,tell,"👁️: up command sent");
+	.sendOut(H,tell,"👁️: Up command received.");
 .
 +!down(Limit)[source(H)] <-
   +running;
@@ -53,8 +53,8 @@ currentLimit(0).
 	!downAjustNumber(Limit);
 	?currentLimit(NewLimit);
 	.send(navigator, tell, command(N+1, down(NewLimit)));
-  .print("👁️: Down command received");
-	.sendOut(H,tell,"👁️: Down command sent");
+  .print("📺: Down command received.");
+	.sendOut(H,tell,"👁️: Down command received.");
 .
 +!forward(Limit)[source(H)] <-
   +running;
@@ -63,8 +63,8 @@ currentLimit(0).
 	!forwardAjustNumber(Limit);
 	?currentLimit(NewLimit);
 	.send(navigator, tell, command(N+1, forward(NewLimit)));
-  .print("👁️: Forward command received");
-	.sendOut(H,tell,"👁️: forward command sent");
+  .print("📺: Forward command received.");
+	.sendOut(H,tell,"👁️: Forward command received.");
 .
 +!backward(Limit)[source(H)] <-
   +running;
@@ -73,8 +73,8 @@ currentLimit(0).
 	!backwardAjustNumber(Limit);
 	?currentLimit(NewLimit);
 	.send(navigator, tell, command(N+1, backward(NewLimit)));
-  .print("👁️:Backward command received");
-	.sendOut(H,tell,"👁️: backward command sent");
+  .print("📺: Backward command received.");
+	.sendOut(H,tell,"👁️: Backward command received.");
 .
 +!left(Limit)[source(H)] <-
   +running;
@@ -83,53 +83,61 @@ currentLimit(0).
 	!leftAjustNumber(Limit);
 	?currentLimit(NewLimit);
 	.send(navigator, tell, command(N+1, left(NewLimit)));
-  .print("👁️: Left command received");
-	.sendOut(H,tell,"👁️: Left command sent");
+  .print("📺: Left command received.");
+	.sendOut(H,tell,"👁️: Left command received.");
 .
 +!right(Limit)[source(H)] <-
   +running;
 	?commandId(N);
 	-+commandId(N+1);
 	!rightAjustNumber(Limit);
-  .print("👁️: Right command received");
+  .print("📺: Right command received.");
 	?currentLimit(NewLimit);
 	.send(navigator, tell, command(N+1, right(NewLimit)));
-	.sendOut(H,tell,"👁️: right command sent");
+	.sendOut(H,tell,"👁️: Right command received.");
 .
 
-+!takeoff[source(H)] <-
++!takeOff[source(H)] <-
 	+running;
 	?commandId(N);
 	-+commandId(N+1);
 	.send(navigator, tell, command(N+1, takeoff));
-  .print("👁️: Right command received");
-	.sendOut(H,tell,"👁️: takeoff command sent");
+  .print("📺: Takeoff command received.");
+	.sendOut(H,tell,"👁️: Take off command received.");
+.
++!land[source(H)] <-
+	+running;
+	?commandId(N);
+	-+commandId(N+1);
+	.send(navigator, tell, command(N+1, land));
+  .print("📺: Land command received.");
+	.sendOut(H,tell,"👁️: Land command received.");
 .
 +!turnOff[source(H)] <-
 	-running;
 	?commandId(N);
 	-+commandId(N+1);
 	.send(navigator, tell, command(N+1, turnOff));
-  .print("👁️: Right command received");
-	.sendOut(H,tell,"👁️: turnoff command sent");
+  .print("📺: Turn off command received.");
+	.sendOut(H,tell,"👁️: Turn off command received.");
 .
+
 
 +!cancel <-
 	.send(navigator, achieve, cancel);
-  .print("Canceling all commands");
+  .print("Canceling all commands.");
 .
 
 
 
 +pathConcluded : teletelaUUID(UUID) & secretaryUUID(Secretary)  <- 
-	.sendOut(UUID, tell, message(UUID, "Path Concluded"));
+	.sendOut(UUID, tell, message(UUID, "Path Concluded."));
 	.wait(1000);
 	-pathConcluded
 .
 
 //? ----------- Helpers -----------
 
-//TODO:  Up down sempre deve ser + ou -
 +!upAjustNumber(N) : N > 0  <- NewLimit = N*1; -+currentLimit(NewLimit) .
 +!upAjustNumber(N) : N == 0 <- NewLimit = 0; -+currentLimit(NewLimit) .
 +!upAjustNumber(N) : N < 0  <- NewLimit = N*-1; -+currentLimit(NewLimit) .

@@ -22,20 +22,21 @@ serialPort(ttyEmulatedPort0).
 .
 
 -!path <- 
-  .print("👁️: I do not know the path");
+  .print("👁️: I do not know the path.");
 .
 
 //--------------- Fase de navegação ---------------
 
 +!argoAct(Command): not cancel <-
     .argo.act(Command);
-    !reset;
+    //!reset;
 .
 -!argoAct(Command) <-
-    .print("👁️: Takeoff canceled");
+    .print("👁️: Takeoff canceled.");
 .
 
-+!takeoff <- 
+//? Internal take off
++!takeOff <- 
 	.print("👁️: To infinity and beyond!");
 	
 	!argoAct(up);
@@ -55,55 +56,113 @@ serialPort(ttyEmulatedPort0).
 	.print("👁️: Ready to action!")
 .
 
-+!land : flying <- 
-    .print("👁️: Landing...");
-    .argo.act(land);
-    -flying
++!takeoff <- 
+    !setBusy;
+
+	.print("👁️: To infinity and beyond!!");
+	
+	!argoAct(up);
+
+	.wait(3000);
+
+    !argoAct(up);
+
+	.wait(2000);
+
+    !argoAct(up);
+
+	.wait(2000);
+
+	+flying;
+
+	.print("👁️: Ready to action!");
+    !reset;
+.
++!takeoff[source(X)] <- 
+    !setBusy;
+	.print("👁️: To infinity and beyond!!");
+	
+	!argoAct(up);
+
+	.wait(3000);
+
+    !argoAct(up);
+
+	.wait(2000);
+
+    !argoAct(up);
+
+	.wait(2000);
+
+	+flying;
+
+	.print("👁️: Ready to action!");
+    !reset;
 .
 
++!land : flying <- 
+    !setBusy;
+    .print("👁️: Landing...");
+    .argo.act(land);
+    -flying;
+    !reset;
+.
+
+/*+!land[source(X)] : flying <- 
+    !setBusy;
+    .print("👁️: Landing... COM SOURCE!!!!!!!!!!");
+    .argo.act(land);
+    -flying;
+    !reset;
+.
+*/
+-!land <-
+    .print("👁️: Cannot execute land. You sure am I flying?");
+.
+
+
 +!turnOff <- 
+    !setBusy;
     .print("👁️: Turning off!");
     .argo.act(off);
     .wait(1000);
     .print("--: Closing eyes!");
+    !reset;
+.
++!turnOff[source(X)] <- 
+    !setBusy;
+    .print("👁️: Turning off!");
+    .argo.act(off);
+    .wait(1000);
+    .print("--: Closing eyes!");
+    !reset;
 .
 
-+!setNotBusy <-
-    -busy;
-    .broadcast(untell, busy);
-.
 
-+cancel[source(X)] <-
-    +cancel
-.
-
-
-//--------------- UP (Z) ---------------
+//--------------- UP (Z) --------------busy[source(eye)]-
 
 +!up(Limit)[source(S)]: gps(_, _, Z) <- 
-    +busy;
-    .broadcast(tell, busy);
+    !setBusy;
     Destination = Z + Limit; 
     !upTo(Destination);
-    .print("👁️: Up executed");
+    .print("👁️: Up executed.");
 .
 +!up(Limit)[source(S)]: not gps(_, _, Z) <- 
     .print("👁️: Without gps...");
     .wait(2000);
     !up(Limit);
 .
--!up(Limit) <- .print("👁️: Warning: falied to execute up").
+-!up(Limit) <- .print("👁️: Warning: falied to execute up.").
 
 
 //? Take off automático
 +!upTo(Limit): not flying <-
-    !takeoff;
+    !takeOff;
     !upTo(Limit);
 .
 +!upTo(Limit): flying <-
     .print("👁️: Rising to: ", Limit);
-    +busy;
-    .broadcast(tell, busy);
+    !setBusy;
     !risingTo(Limit);
 .
 
@@ -125,21 +184,25 @@ serialPort(ttyEmulatedPort0).
    	.print("👁️: Rise concluded.");
 .
 
++!risingTo(Limit) : not gps(_, _, Z) <- 
+    .print("👁️: Without gps...");
+    .wait(2000);
+    !risingTo(Limit);
+.
 
 +!risingTo(Limit): cancel <-
     !reset;
-    .print("👁️: Canceled rising");
+    .print("👁️: Canceled rising.");
 .
 
 //--------------- DOWN (Z) ---------------
 
 
 +!down(Limit)[source(S)] : flying & gps(_, _, Z) <-
-    +busy;
-    .broadcast(tell, busy);
+    !setBusy;
     Destination = Z + Limit; 
     !downTo(Destination);
-    .print("👁️: Down executed"); 
+    .print("👁️: Down executed."); 
 .
 +!down(Limit)[source(S)]: not gps(_, _, Z) <- 
     .print("👁️: Without gps...");
@@ -152,8 +215,7 @@ serialPort(ttyEmulatedPort0).
 
 +!downTo(DownLimit) : flying   <-
     .print("👁️: Downing to: ", DownLimit);
-    +busy;    
-    .broadcast(tell, busy);
+    !setBusy;
     !downingTo(DownLimit)
 .
 
@@ -175,24 +237,28 @@ serialPort(ttyEmulatedPort0).
 
 +!downingTo(DownLimit) : gps(_, _, Z) & (DownLimit + 0.1) >= Z & not cancel <- 
     !reset;
-    .print("👁️: Descida concluída.");
+    .print("👁️: Down concluded.");
 .
 
++!downingTo(DownLimit) : not gps(_, _, Z) <- 
+    .print("👁️: Without gps...");
+    .wait(2000);
+    !downingTo(DownLimit);
+.
 
 +!downingTo(DownLimit): cancel <-
     !reset;
-    .print("👁️: Canceled downing");
+    .print("👁️: Canceled downing.");
 .
 
 
 //--------------- Foward (X) ---------------
 
 +!forward(Limit)[source(S)] : flying & gps(X, _, _) <-
-    +busy;
-    .broadcast(tell, busy);
+    !setBusy;
     Destination = X + Limit; 
     !forwardTo(Destination);
-    .print("👁️: Forward executed"); 
+    .print("👁️: Forward executed."); 
 .
 +!forward(Limit)[source(S)]: not gps(X, _, _) <- 
     .print("👁️: Without gps...");
@@ -203,10 +269,9 @@ serialPort(ttyEmulatedPort0).
 
 
 +!forwardTo(FrontLimit) : flying  <-
-    .print("👁️: Indo para frente até: ", FrontLimit);
-    +busy;    
-    .broadcast(tell, busy);
-    !forwardingTo(FrontLimit)
+    .print("👁️: Forwarding to: ", FrontLimit);
+    !setBusy;
+    !forwardingTo(FrontLimit);
 .
 
 
@@ -225,21 +290,25 @@ serialPort(ttyEmulatedPort0).
 .
 +!forwardingTo(FrontLimit) : gps(X, _, _) & (FrontLimit + 0.1) >= X & not cancel  <- 
     !reset;
-    .print("👁️: Frente concluída.");
+    .print("👁️: Forward concluded.");
 .
 
++!forwardingTo(FrontLimit) : not gps(X, _, _)   <- 
+    .print("👁️: Without gps...");
+    .wait(2000);
+    !forwardingTo(FrontLimit);
+.
 
 +!forwardingTo(FrontLimit): cancel <-
     !reset;
-    .print("Canceled forwarding");
+    .print("👁️: Canceled forwarding.");
 .
 
 
 //--------------- Backwards (X) ---------------
 
 +!backward(Limit)[source(S)] : flying & gps(X, _, _) <-
-    +busy;
-    .broadcast(tell, busy);
+    !setBusy;
     Destination = X + Limit; 
     !backwardTo(Destination);
     .print("👁️: Backward executed"); 
@@ -254,16 +323,15 @@ serialPort(ttyEmulatedPort0).
 
 
 +!backwardTo(BackLimit) : flying  <-
-    .print("👁️: Indo para trás até: ", BackLimit);
-    +busy;    
-    .broadcast(tell, busy);
+    .print("👁️: Backwarding to: ", BackLimit);
+    !setBusy;
     !backwardingTo(BackLimit)
 .
 
 +!backwardingTo(BackLimit) : gps(X, _, _) & (BackLimit - 0.1) > X & not cancel <- 
     //!printMetaDebug(BackLimit); //! debug
 
-    .print("👁️: Indo para trás ⬇️");
+    .print("👁️: Backwarding ⬇️...");
     .argo.act(backward);
 
     .wait(2000);
@@ -275,13 +343,18 @@ serialPort(ttyEmulatedPort0).
 .
 +!backwardingTo(BackLimit) : gps(X, _, _) & (BackLimit - 0.1) <= X & not cancel <- 
     !reset;
-    .print("👁️: Traseira concluída.");
+    .print("👁️: Backward concluded.");
 .
 
++!backwardingTo(BackLimit) : not gps(X, _, _) <- 
+    .print("👁️: Without gps...");
+    .wait(2000);
+    !backwardingTo(BackLimit);
+.
 
 +!backwarding(BackLimit) : cancel  <-
     !reset;
-    .print("👁️: Traseira cancelada");
+    .print("👁️: Backward Canceled.");
 .
 
 
@@ -289,11 +362,10 @@ serialPort(ttyEmulatedPort0).
 
 
 +!left(Limit)[source(S)] : flying & gps(_, Y, _) <-
-    +busy;
-    .broadcast(tell, busy);
+    !setBusy;
     Destination = Y + Limit; 
     !leftTo(Destination);
-    .print("👁️: Left executed"); 
+    .print("👁️: Left executed."); 
 .
 +!left(Limit)[source(S)]: not gps(_, Y, _) <- 
     .print("👁️: Without gps...");
@@ -305,16 +377,15 @@ serialPort(ttyEmulatedPort0).
 
 
 +!leftTo(LeftLimit) : flying  <-
-    .print("👁️: Indo para esquerda até: ", LeftLimit);
-    +busy;    
-    .broadcast(tell, busy);
+    .print("👁️: Lefting to: ", LeftLimit);
+    !setBusy;
     !leftingTo(LeftLimit)
 .
 
 +!leftingTo(LeftLimit) : gps(_, Y, _) & (LeftLimit + 0.1) < Y & not cancel <- 
     //!printMetaDebug(LeftLimit); //! debug
 
-    .print("👁️: Indo para esquerda ⬅️");
+    .print("👁️: Going left ⬅️...");
     .argo.act(left);
 
     .wait(2000);
@@ -329,9 +400,15 @@ serialPort(ttyEmulatedPort0).
     .print("👁️: Left concluded.");
 .
 
++!leftingTo(LeftLimit) : not gps(_, Y, _) <- 
+    .print("👁️: Without gps...");
+    .wait(2000);
+    !leftingTo(LeftLimit);
+.
+
 +!leftingTo(LeftLimit) : cancel  <-
     !reset;
-    .print("👁️: Left canceled");
+    .print("👁️: Left canceled.");
 .
 
 
@@ -339,11 +416,10 @@ serialPort(ttyEmulatedPort0).
 //--------------- Right (Y) ---------------
 
 +!right(Limit)[source(S)] : flying & gps(_, Y, _) <-
-    +busy;
-    .broadcast(tell, busy);
+    !setBusy;
     Destination = Y + Limit;
     !rightTo(Destination);
-    .print("👁️: Right executed");
+    .print("👁️: Right executed.");
 .
 +!right(Limit)[source(S)]: not gps(_, Y, _) <- 
     .print("👁️: Without gps...");
@@ -355,16 +431,15 @@ serialPort(ttyEmulatedPort0).
 
 
 +!rightTo(RightLimit) : flying <-
-    .print("👁️: Indo para direita até: ", RightLimit);
-    +busy;
-    .broadcast(tell, busy);
-    !rightingTo(RightLimit)
+    .print("👁️: Righting to: ", RightLimit);
+    !setBusy;
+    !rightingTo(RightLimit);
 .
 
 +!rightingTo(RightLimit) : gps(_, Y, _) & (RightLimit - 0.1) > Y & not cancel <- 
     //!printMetaDebug(RightLimit); //! debug
 
-    .print("👁️: Indo para direita ➡️");
+    .print("👁️: Going right ➡️...");
     .argo.act(right);
 
     .wait(2000);
@@ -376,22 +451,44 @@ serialPort(ttyEmulatedPort0).
 .
 +!rightingTo(RightLimit) : gps(_, Y, _) & (RightLimit - 0.1) <= Y & not cancel <- 
     !reset;
-    .print("👁️: righting concluded.");
+    .print("👁️: Righting concluded.");
+.
+
++!rightingTo(RightLimit) : not gps(_, Y, _) <- 
+    .print("👁️: Without gps...");
+    .wait(2000);
+    !rightingTo(RightLimit);
 .
 
 +!rightingTo(RightLimit) : cancel <-
     !reset;
-    .print("👁️: righting canceled");
+    .print("👁️: Righting canceled.");
 .
 
-//--------------- Comunicate ---------------
+//--------------- Helpers ---------------
 
 +!reset <- 
     -cancel[source(_)];
     -cancel;
     -busy;
     .broadcast(untell, busy);
+    .print("👁️: I am open to work!")
 .
+
++!setNotBusy <-
+    -busy;
+    .broadcast(untell, busy);
+.
+
++!setBusy <- 
+    +busy;
+    .broadcast(tell, busy);
+.
+
++cancel[source(X)] <-
+    +cancel
+.
+
 
 //--------------- Debug ---------------
 
